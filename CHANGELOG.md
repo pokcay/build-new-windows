@@ -2,7 +2,7 @@
 
 Versions are numbered using the release date in `YYYY.MM.DD` format.
 
-## 2026.4.27 — 2026-04-27
+## 2026.4.27
 
 Initial release.
 
