@@ -53,6 +53,24 @@ Copy-Item .env.example .env
 | `DATABASE_PORT` | `5432` | PostgreSQL port |
 | `DATABASE_NAME` | _(folder name)_ | Override database base name |
 
+## Troubleshooting
+
+### `server closed the connection unexpectedly` / lupa password PostgreSQL
+
+Jalankan script reset yang akan mengubah PostgreSQL ke mode **trust** untuk koneksi lokal (tanpa password). **Hanya untuk development lokal.**
+
+```powershell
+.\bin\reset-postgres-auth.ps1
+```
+
+Script ini akan auto-elevate ke Administrator via UAC, backup `pg_hba.conf`, ubah ke `trust`, dan restart service. Setelah itu:
+
+```powershell
+Remove-Item .env -ErrorAction SilentlyContinue
+ruby bin/setup
+# Kosongkan password saat ditanya
+```
+
 ## Running Tests
 
 ```powershell
