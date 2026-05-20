@@ -7,19 +7,29 @@
 
 if (-not $env:PORT) { $env:PORT = "3000" }
 
+function Stop-PortListeners {
+    param([int]$Port)
+    try {
+        $connections = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
+        foreach ($conn in $connections) {
+            $procId = $conn.OwningProcess
+            if ($procId -and $procId -ne 0) {
+                $proc = Get-Process -Id $procId -ErrorAction SilentlyContinue
+                if ($proc) {
+                    Write-Host "Stopping stale process on port $Port (pid: $procId, name: $($proc.ProcessName))..." -ForegroundColor Yellow
+                    Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+                }
+            }
+        }
+        if ($connections) { Start-Sleep -Seconds 1 }
+    } catch {}
+}
+
+Stop-PortListeners -Port ([int]$env:PORT)
+Stop-PortListeners -Port 3036
+
 $pidFile = "tmp\pids\server.pid"
 if (Test-Path $pidFile) {
-    $oldPid = Get-Content $pidFile -ErrorAction SilentlyContinue
-    $running = $false
-    if ($oldPid) {
-        $process = Get-Process -Id $oldPid -ErrorAction SilentlyContinue
-        if ($process) { $running = $true }
-    }
-    if ($running) {
-        Write-Host "Rails server is already running (pid: $oldPid). Stopping it first..." -ForegroundColor Yellow
-        Stop-Process -Id $oldPid -Force -ErrorAction SilentlyContinue
-        Start-Sleep -Seconds 1
-    }
     Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
 }
 
