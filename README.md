@@ -12,19 +12,37 @@ Install these before running setup:
 
 | Tool | Version | Download |
 |------|---------|----------|
-| Ruby | 3.3.6 | [RubyInstaller for Windows](https://rubyinstaller.org/) — choose **Ruby+Devkit** |
+| Ruby | 3.3.6+ | [RubyInstaller for Windows](https://rubyinstaller.org/) — choose **Ruby+Devkit** |
 | Node.js | >=22.12.0 | [nodejs.org](https://nodejs.org/) |
-| PostgreSQL | 10+ | [EDB Installer](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads) — add `bin/` to PATH |
+| PostgreSQL | 10+ | [EDB Installer](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads) |
 
-> **Note:** After installing PostgreSQL, add its `bin/` folder to your system PATH (e.g. `C:\Program Files\PostgreSQL\16\bin`).
+> The setup script auto-detects PostgreSQL in `C:\Program Files\PostgreSQL\*` and adds it to your PATH automatically. You don't need to do this manually.
 
 ## Quick Start
 
+The same 5 commands work on a fresh machine **and** on a machine already configured — `bin/setup` handles every difference automatically.
+
 ```powershell
-bin/setup        # checks prerequisites, installs gems, creates and migrates the database
-npm install      # installs JS dependencies
-.\bin\dev.ps1    # starts Rails (:3000) + Vite (:3036)
+git clone https://github.com/pokcay/build-new-windows.git my-project
+cd my-project
+ruby bin/setup     # auto-detect, configure, migrate
+npm install
+.\bin\dev.ps1      # http://localhost:3000
 ```
+
+### What `ruby bin/setup` does automatically
+
+1. **Checks Ruby, Node.js, PostgreSQL** — clear error if anything is missing
+2. **Adds PostgreSQL to PATH** if not already there (persisted for future terminals)
+3. **Starts the PostgreSQL service** if it's stopped
+4. **Creates `.env`** from `.env.example` with sensible defaults
+5. **Tests the database connection** — if it fails:
+   - On Windows, automatically prompts for Administrator (UAC)
+   - Switches `pg_hba.conf` to **trust mode** for local connections
+   - Restarts PostgreSQL and retries
+6. **Runs `bundle install`** and **`db:prepare`** (creates + migrates databases)
+
+If anything goes wrong it prints exactly what to fix.
 
 ## Dynamic Database Name
 
@@ -35,46 +53,48 @@ The database name is automatically derived from your **project folder name**.
 | `my-app` | `my_app_development`, `my_app_test`, `my_app_production` |
 | `cool_project` | `cool_project_development`, `cool_project_test`, `cool_project_production` |
 
-To override, set `DATABASE_NAME` in your `.env` file.
+Override via `DATABASE_NAME` in `.env`.
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and fill in your PostgreSQL credentials:
-
-```powershell
-Copy-Item .env.example .env
-```
+The setup script creates `.env` for you with defaults. Edit it if you want to use different credentials.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `DATABASE_USER` | Windows username | PostgreSQL user |
+| `DATABASE_USER` | `postgres` | PostgreSQL user |
 | `DATABASE_PASSWORD` | _(empty)_ | PostgreSQL password |
-| `DATABASE_HOST` | `localhost` | PostgreSQL host |
+| `DATABASE_HOST` | `127.0.0.1` | PostgreSQL host |
 | `DATABASE_PORT` | `5432` | PostgreSQL port |
-| `DATABASE_NAME` | _(folder name)_ | Override database base name |
+| `DATABASE_NAME` | _(folder name)_ | Override base database name |
 
 ## Troubleshooting
 
-### `server closed the connection unexpectedly` / lupa password PostgreSQL
+### Connection failed even after setup
 
-Jalankan script reset yang akan mengubah PostgreSQL ke mode **trust** untuk koneksi lokal (tanpa password). **Hanya untuk development lokal.**
+Re-run setup — it will retry the auth fix:
+
+```powershell
+ruby bin/setup
+```
+
+Or run the reset script manually (right-click → Run as Administrator):
 
 ```powershell
 .\bin\reset-postgres-auth.ps1
 ```
 
-Script ini akan auto-elevate ke Administrator via UAC, backup `pg_hba.conf`, ubah ke `trust`, dan restart service. Setelah itu:
+### Dev server won't start ("port in use" or stale PID)
+
+`bin\dev.ps1` automatically kills stale processes on ports 3000 and 3036 before starting. If you still see issues, manually:
 
 ```powershell
-Remove-Item .env -ErrorAction SilentlyContinue
-ruby bin/setup
-# Kosongkan password saat ditanya
+Get-NetTCPConnection -LocalPort 3000 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
 ```
 
 ## Running Tests
 
 ```powershell
-bin/rails test
+ruby bin/rails test
 ```
 
 ## Links
