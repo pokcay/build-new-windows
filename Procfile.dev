@@ -1,3 +1,3 @@
-web: bin/rails s
-vite: bin/vite dev
-jobs: bin/jobs
+web: ruby bin/rails s
+vite: ruby bin/vite dev
+jobs: ruby bin/jobs
