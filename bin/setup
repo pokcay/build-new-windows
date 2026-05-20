@@ -29,6 +29,26 @@ def add_to_user_path(dir)
          out: File::NULL, err: File::NULL)
 end
 
+def ensure_pg_service_running_windows
+  svc_name = `powershell -Command "Get-Service | Where-Object { $_.Name -like 'postgresql*' } | Select-Object -ExpandProperty Name -First 1"`.strip rescue ""
+  return if svc_name.empty?
+
+  status = `powershell -Command "(Get-Service '#{svc_name}').Status"`.strip rescue ""
+  return if status == "Running"
+
+  puts "  PostgreSQL service (#{svc_name}) is not running. Starting..."
+  started = system("powershell -Command \"Start-Service '#{svc_name}'\"", out: File::NULL, err: File::NULL)
+  if started
+    sleep 2
+    puts "  PostgreSQL service started ✓"
+  else
+    puts "  Could not start PostgreSQL service automatically (may need Administrator)."
+    puts "  Fix: Right-click PowerShell → 'Run as Administrator', then run this script again."
+    puts "  Or manually: Start → search 'Services' → find PostgreSQL → right-click → Start"
+    abort
+  end
+end
+
 FileUtils.chdir APP_ROOT do
   # This script is a way to set up or update your development environment automatically.
   # This script is idempotent, so that you can run it at any time and get an expectable outcome.
@@ -76,6 +96,8 @@ FileUtils.chdir APP_ROOT do
       abort "  ERROR: PostgreSQL not found. Install PostgreSQL 10+ and make sure it is running."
     end
   end
+
+  ensure_pg_service_running_windows if windows?
 
   pg_version = `psql --version`.strip rescue "unknown"
   puts "  PostgreSQL (#{pg_version}) ✓"
