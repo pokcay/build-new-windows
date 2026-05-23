@@ -10,9 +10,41 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_04_23_000005) do
+ActiveRecord::Schema[8.0].define(version: 2026_05_24_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "email_templates", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "name", null: false
+    t.text "description"
+    t.string "subject", default: "", null: false
+    t.text "body_html"
+    t.text "body_text"
+    t.boolean "customized", default: false, null: false
+    t.bigint "updated_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["key"], name: "index_email_templates_on_key", unique: true
+    t.index ["updated_by_id"], name: "index_email_templates_on_updated_by_id"
+  end
+
+  create_table "inbound_emails", force: :cascade do |t|
+    t.string "from", null: false
+    t.string "to", null: false
+    t.string "reply_to"
+    t.string "subject"
+    t.text "body_html"
+    t.text "body_text"
+    t.datetime "received_at", null: false
+    t.boolean "read", default: false, null: false
+    t.boolean "archived", default: false, null: false
+    t.text "raw_payload"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["archived", "read", "received_at"], name: "index_inbound_emails_on_archived_and_read_and_received_at"
+    t.index ["to", "archived"], name: "index_inbound_emails_on_to_and_archived"
+  end
 
   create_table "sessions", force: :cascade do |t|
     t.integer "user_id", null: false
@@ -175,6 +207,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_23_000005) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "email_templates", "users", column: "updated_by_id"
   add_foreign_key "sessions", "users"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

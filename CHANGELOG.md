@@ -2,6 +2,40 @@
 
 Versions are numbered using the release date in `YYYY.MM.DD` format.
 
+## 2026.5.24 — Admin inbox, email templates, Resend
+
+Back-ported production-ready admin and email infrastructure from a deployed app (generic, no business logic):
+
+**Admin Inbox (`/admin/inbox`):**
+
+- `inbound_emails` table + `InboundEmail` model
+- `POST /webhooks/inbound_email` webhook (secret-verified)
+- Admin inbox UI: list with tabs (all/unread/archived), bulk actions, show page with HTML/text body
+- Unread count badge in admin sidebar
+- Optional `cloudflare-worker/` for Cloudflare Email Routing ingest
+
+**Admin Email Templates (`/admin/email-templates`):**
+
+- `email_templates` table + `EmailTemplate` model
+- Edit password-reset template in-browser (Markdown HTML + plain text, variable picker, preview, send test, reset to default)
+- `PasswordsMailer` reads from DB template when present
+- `kramdown` gem for Markdown → HTML; `marked` npm package for admin preview
+
+**Resend transactional email:**
+
+- `resend` gem + `config/initializers/resend.rb`
+- Production/staging use `:resend` delivery; development keeps letter_opener
+- `MAIL_FROM`, `MAIL_REPLY_TO`, `APP_HOST` env vars documented in `.env.example`
+
+**Other:**
+
+- `bin/setup_credentials` for per-env encrypted credentials (`config/credentials/*.key` gitignored)
+- `vite.config.ts` manualChunks for milkdown/react/radix/lucide + `maxParallelFileOps`
+- Expanded `docs/hatchbox-deployment-guide.md` (Resend, Cloudflare Email Routing, inbox Worker, staging+prod split)
+- `CLAUDE.md` sections for transactional email and admin inbox/templates
+- `README.md`: `PARALLEL_WORKERS=1` Windows test tip + Hatchbox deployment link
+- `public/robots.txt`: disallow `/admin` and `/webhooks`
+
 ## 2026.5.20 — Windows-compatible fork
 
 Repository forked to [`pokcay/build-new-windows`](https://github.com/pokcay/build-new-windows). All template logic now runs natively on Windows in addition to Unix/macOS. No application code (controllers, models, components) was changed — only setup, configuration, and developer-workflow files.

@@ -1,0 +1,11 @@
+name = "email-ingest"
+main = "email-ingest.js"
+compatibility_date = "2024-09-23"
+workers_dev = false
+
+[vars]
+# Update this URL to match your deployed domain.
+WEBHOOK_URL = "https://example.com/webhooks/inbound_email"
+
+# WEBHOOK_SECRET is set as a Wrangler secret (never stored here).
+# Deploy with: npx wrangler secret put WEBHOOK_SECRET

@@ -17,6 +17,10 @@ import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
 import { cn } from "@/lib/utils";
 
+export interface RichTextFieldHandle {
+  insertText: (text: string) => void;
+}
+
 export interface RichTextFieldProps {
   defaultValue?: string;
   onChange?: (markdown: string) => void;
@@ -168,13 +172,17 @@ function toggleListMode(ctx: Ctx, target: ListMode) {
   if (tr.docChanged) view.dispatch(tr);
 }
 
-const RichTextField = React.forwardRef<HTMLDivElement, RichTextFieldProps>(
+const RichTextField = React.forwardRef<RichTextFieldHandle, RichTextFieldProps>(
   (
     { defaultValue = "", onChange, placeholder, readOnly = false, className },
     ref,
   ) => {
     const localRef = React.useRef<HTMLDivElement>(null);
-    React.useImperativeHandle(ref, () => localRef.current as HTMLDivElement);
+    const insertFnRef = React.useRef<((text: string) => void) | null>(null);
+
+    React.useImperativeHandle(ref, () => ({
+      insertText: (text: string) => insertFnRef.current?.(text),
+    }));
 
     const onChangeRef = React.useRef(onChange);
     React.useEffect(() => {
@@ -258,6 +266,15 @@ const RichTextField = React.forwardRef<HTMLDivElement, RichTextFieldProps>(
       root.addEventListener("keydown", onKeyDown);
 
       crepe.create().then(() => {
+        insertFnRef.current = (text: string) => {
+          crepe.editor.action((ctx) => {
+            const view = ctx.get(editorViewCtx);
+            const { state, dispatch } = view;
+            const tr = state.tr.insertText(text, state.selection.from, state.selection.to);
+            dispatch(tr);
+            view.focus();
+          });
+        };
         crepe.on((listener) => {
           listener.markdownUpdated((_, markdown) => {
             onChangeRef.current?.(markdown);
@@ -266,6 +283,7 @@ const RichTextField = React.forwardRef<HTMLDivElement, RichTextFieldProps>(
       });
 
       return () => {
+        insertFnRef.current = null;
         root.removeEventListener("keydown", onKeyDown);
         crepe.destroy();
       };

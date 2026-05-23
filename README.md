@@ -107,6 +107,16 @@ This builds the SSR bundle once, sets `INERTIA_SSR=1`, and starts everything via
 ruby bin/rails test
 ```
 
+On Windows, if tests hang or fail with database connection errors under parallel load, run with a single worker:
+
+```powershell
+$env:PARALLEL_WORKERS=1; ruby bin/rails test
+```
+
+## Deployment
+
+See [`docs/hatchbox-deployment-guide.md`](docs/hatchbox-deployment-guide.md) for Hatchbox setup including Resend, per-environment credentials, Cloudflare Email Routing, and the optional inbound-email Worker.
+
 ## Links
 
 - 💬 Direct support: [Builder Methods Pro](https://buildermethods.com/pro)

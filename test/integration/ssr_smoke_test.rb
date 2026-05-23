@@ -24,8 +24,9 @@ class SsrSmokeTest < ActiveSupport::TestCase
             "or `npm run ssr` before running this test"
     end
 
-    unless system("bin/vite build --ssr", chdir: Rails.root.to_s)
-      flunk "Failed to build SSR bundle — check `bin/vite build --ssr` output"
+    vite_cmd = Gem.win_platform? ? "ruby bin/vite build --ssr" : "bin/vite build --ssr"
+    unless system(vite_cmd, chdir: Rails.root.to_s)
+      flunk "Failed to build SSR bundle — check `#{vite_cmd}` output"
     end
 
     @ssr_pid = Process.spawn("node", SSR_BUNDLE.to_s, out: File::NULL, err: File::NULL)
@@ -39,9 +40,13 @@ class SsrSmokeTest < ActiveSupport::TestCase
 
   teardown do
     next unless @ssr_pid
-    Process.kill("TERM", @ssr_pid)
+    if Gem.win_platform?
+      Process.kill("KILL", @ssr_pid)
+    else
+      Process.kill("TERM", @ssr_pid)
+    end
     Process.wait(@ssr_pid)
-  rescue Errno::ESRCH, Errno::ECHILD
+  rescue Errno::ESRCH, Errno::ECHILD, Errno::EINVAL
     nil
   end
 

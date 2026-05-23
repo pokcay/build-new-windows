@@ -31,6 +31,7 @@ export type NavItemDef = {
   icon: React.ComponentType<{ className?: string }>
   label: string
   match: (url: string) => boolean
+  badge?: string
 }
 
 const DEFAULT_NAV_ITEMS: NavItemDef[] = [
@@ -213,6 +214,7 @@ function RailNav({
           href={item.href}
           icon={item.icon}
           label={item.label}
+          badge={item.badge}
           active={item.match(url)}
           open={open}
           onClick={onClose}
@@ -226,6 +228,7 @@ function NavItem({
   href,
   icon: Icon,
   label,
+  badge,
   active,
   open,
   onClick,
@@ -233,6 +236,7 @@ function NavItem({
   href: string
   icon: React.ComponentType<{ className?: string }>
   label: string
+  badge?: string
   active?: boolean
   open: boolean
   onClick?: () => void
@@ -252,7 +256,16 @@ function NavItem({
         )}
       >
         <Icon className="h-4 w-4 shrink-0" />
-        {open && <span className="truncate">{label}</span>}
+        {open && (
+          <span className="flex min-w-0 flex-1 items-center gap-2">
+            <span className="truncate">{label}</span>
+            {badge && (
+              <span className="ml-auto shrink-0 rounded-full bg-danger-faded px-1.5 py-0.5 text-xs font-semibold text-danger-display">
+                {badge}
+              </span>
+            )}
+          </span>
+        )}
       </Link>
       {!open && (
         <span

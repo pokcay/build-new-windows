@@ -19,3 +19,14 @@ User.find_or_create_by!(email: "admin@test.com") do |user|
   user.timezone = "America/New_York"
   user.admin = true
 end
+
+EmailTemplateConfig::DEFAULTS.each do |config|
+  EmailTemplate.find_or_create_by!(key: config[:key]) do |t|
+    t.name        = config[:name]
+    t.description = config[:description]
+    t.subject     = config[:subject]
+    t.body_html   = config[:body_html]
+    t.body_text   = config[:body_text]
+    t.customized  = false
+  end
+end

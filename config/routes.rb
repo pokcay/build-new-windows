@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  # Inbound email webhook — called by Cloudflare Worker, not browser-gated
+  post "webhooks/inbound_email", to: "webhooks/inbound_emails#create"
+
   get  "login",  to: "sessions#new",     as: :login
   post "login",  to: "sessions#create"
   delete "logout", to: "sessions#destroy", as: :logout
@@ -15,6 +18,17 @@ Rails.application.routes.draw do
     root to: redirect("/admin/users")
     get "design-system", to: "design_system#show", as: :design_system
     resources :users, only: %i[ index show ]
+    resources :email_templates, path: "email-templates", only: %i[ index show update ] do
+      member do
+        post :send_test
+        post :reset_to_default
+      end
+    end
+    resources :inbound_emails, path: "inbox", only: %i[ index show update ] do
+      collection do
+        patch :bulk_update
+      end
+    end
   end
 
   get   "profile",          to: "profiles#details",          as: :profile

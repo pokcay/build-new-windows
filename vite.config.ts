@@ -35,6 +35,19 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./app/frontend', import.meta.url)),
     },
   },
+  build: {
+    rollupOptions: {
+      maxParallelFileOps: 10,
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/@milkdown')) return 'milkdown'
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) return 'react-vendor'
+          if (id.includes('node_modules/@radix-ui')) return 'radix'
+          if (id.includes('node_modules/lucide-react')) return 'lucide'
+        },
+      },
+    },
+  },
   // SSR. `bin/vite build --ssr` bundles app/javascript/ssr/ssr.tsx (the
   // vite-plugin-ruby default `ssrEntrypoint`) into public/vite-ssr/ssr.js.
   // noExternal: true bundles every dependency into the output so the Node

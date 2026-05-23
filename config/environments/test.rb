@@ -50,4 +50,8 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # Windows PostgreSQL installs often use a non-superuser role that cannot
+  # VALIDATE CONSTRAINT against pg_catalog.pg_constraint (Rails 8 fixture FK check).
+  config.active_record.verify_foreign_keys_for_fixtures = false if Gem.win_platform?
 end

@@ -14,6 +14,7 @@ export type SharedProps = {
     alert: string | null
   }
   errors: Record<string, string>
+  admin_inbox_unread_count?: number
 }
 
 export type PageProps<T extends Record<string, unknown> = Record<string, unknown>> =

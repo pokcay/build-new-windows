@@ -69,6 +69,27 @@ The `@` path alias resolves to `app/frontend/` in both Vite and TypeScript confi
 - `public/robots.txt` — crawler allow/deny rules + sitemap pointer
 - `public/llms.txt` — curated, plain-text site map for LLM crawlers
 
+## Transactional email (Resend)
+
+Production and staging deliver mail via **Resend** (`gem "resend"`, `config/initializers/resend.rb`). Development uses **letter_opener** (browser preview).
+
+- **`MAIL_FROM`** / **`MAIL_REPLY_TO`** — set in Hatchbox env (see `.env.example`)
+- **`RESEND_API_KEY`** — store in `config/credentials/<env>.yml.enc` via `ruby bin/rails runner bin/setup_credentials resend_api_key re_xxx`, or set `RESEND_API_KEY` in env
+- **`APP_HOST`** — hostname only (e.g. `yourdomain.com`); used by mailer URL helpers and sitemap
+
+Mailers that use DB-backed templates render via `app/views/application_mailer/from_db_template.*.erb`. `PasswordsMailer#reset` reads the `password_reset` template from the database when present, falling back to the static ERB views otherwise.
+
+Admin → **Email templates** (`/admin/email-templates`) lets admins edit templates in-browser (Markdown HTML body + plain-text body), preview with sample data, send test emails, and reset to defaults. Defaults live in `app/lib/email_template_config.rb`; seeds create DB rows from `EmailTemplateConfig::DEFAULTS`.
+
+## Admin Inbox
+
+Inbound email is captured via `POST /webhooks/inbound_email` (not browser-gated — verified by `X-Webhook-Secret` header). The optional **`cloudflare-worker/`** package deploys a Cloudflare Email Routing Worker that parses MIME and forwards JSON to this endpoint.
+
+- Model: `InboundEmail` — scopes `active`, `unread`, `archived`
+- Admin UI: `/admin/inbox` (Index + Show, bulk actions, unread badge in sidebar)
+- Secret: `inbound_email_webhook_secret` in credentials or `INBOUND_EMAIL_WEBHOOK_SECRET` env var
+- `Admin::BaseController` shares `admin_inbox_unread_count` on every admin page
+
 ## Inertia controller response rules (common LLM footgun)
 
 **NEVER use `head :ok`, `render json:`, or any non-Inertia response from controller actions called by Inertia's frontend router** (`router.patch`, `router.post`, `router.put`, `router.delete`, `router.get`). Inertia expects one of:

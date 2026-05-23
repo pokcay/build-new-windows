@@ -1,0 +1,8 @@
+password_reset:
+  key: password_reset
+  name: Password reset
+  description: Sent when a user requests a password reset link.
+  subject: Reset your password
+  body_html: "You can reset your password at {{reset_url}}"
+  body_text: "Reset your password: {{reset_url}}"
+  customized: false

@@ -1,0 +1,27 @@
+unread_one:
+  from: sender@example.com
+  to: hello@example.com
+  subject: "Hello from the outside"
+  body_html: "<p>Hello!</p>"
+  body_text: "Hello!"
+  received_at: 2026-05-23 10:00:00
+  read: false
+  archived: false
+
+read_one:
+  from: another@example.com
+  to: hello@example.com
+  subject: "Already read"
+  body_text: "Just text here."
+  received_at: 2026-05-23 09:00:00
+  read: true
+  archived: false
+
+archived_one:
+  from: old@example.com
+  to: hello@example.com
+  subject: "Archived email"
+  body_text: "This was archived."
+  received_at: 2026-05-23 08:00:00
+  read: true
+  archived: true

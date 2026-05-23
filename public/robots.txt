@@ -14,6 +14,8 @@ Disallow: /passwords
 Disallow: /dashboard
 Disallow: /settings
 Disallow: /profile
+Disallow: /admin
+Disallow: /webhooks
 Disallow: /letter_opener
 Disallow: /up
 
